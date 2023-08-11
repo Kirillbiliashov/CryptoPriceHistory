@@ -21,9 +21,7 @@ class TradingDataViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val tradingData = repository.getTradingData("BTCUSDT")
-
-            _tradingDataFlow.value = tradingData
+            _tradingDataFlow.value = repository.getTradingData("BTCUSDT")
         }
     }
 

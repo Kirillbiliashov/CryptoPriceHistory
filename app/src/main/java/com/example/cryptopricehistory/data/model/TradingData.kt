@@ -15,4 +15,7 @@ data class TradingData(
     val closePrice: Double,
     @SerializedName("8")
     val numberOfTrades: Int
-)
+) {
+    val priceChange = ((closePrice - openPrice) / openPrice) * 100
+    val priceWentDown = closePrice < openPrice
+}
