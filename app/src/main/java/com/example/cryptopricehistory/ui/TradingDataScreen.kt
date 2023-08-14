@@ -1,6 +1,5 @@
 package com.example.cryptopricehistory.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,22 +10,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,12 +33,14 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.cryptopricehistory.utils.UtilFunctions.toDateString
 import androidx.paging.compose.items
+import com.example.cryptopricehistory.data.model.TradingData
+import com.example.cryptopricehistory.data.paging.UiModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TradingDataScreen(modifier: Modifier = Modifier) {
     val viewModel: TradingDataViewModel = hiltViewModel()
-    val tradingDataItems = viewModel.tradingDataFlow.collectAsLazyPagingItems()
+    val uiItems = viewModel.tradingDataFlow.collectAsLazyPagingItems()
     val currentSearchState = viewModel.currentSearchFlow.collectAsState()
     Scaffold(topBar = { TopAppBar(title = { Text(text = "Crypto price history") }) }) { padding ->
         Column(
@@ -61,70 +58,82 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.Center,
                 modifier = modifier.fillMaxHeight()
             ) {
-                if (tradingDataItems.loadState.prepend is LoadState.Loading) {
+                val indicatorModifier = modifier.padding(vertical = 8.dp)
+                if (uiItems.loadState.refresh is LoadState.Loading) {
                     item {
-                        CircularProgressIndicator(modifier = modifier.padding(vertical = 8.dp))
-                    }
-                }
-                if (tradingDataItems.loadState.refresh is LoadState.Loading) {
-                    item {
-                        CircularProgressIndicator(modifier = modifier.padding(vertical = 8.dp))
+                        CircularProgressIndicator(modifier = indicatorModifier)
                     }
                 } else {
-                    items(tradingDataItems, key = { it.openTime }) { tradingData ->
-                        tradingData?.let {
-                            Column(modifier = modifier.fillMaxWidth()) {
-                                Row(
-                                    modifier = modifier
-                                        .fillMaxWidth()
-                                        .padding(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(text = tradingData.openPrice.toString(), fontSize = 18.sp)
-                                    Column {
-                                        Text(text = tradingData.openTime.toDateString("MM.dd.yy HH:mm"))
-                                        Text(text = "High: ${tradingData.highPrice}")
-                                        Text(text = "Low: ${tradingData.lowPrice}")
-                                    }
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        val color =
-                                            if (tradingData.priceWentDown) Color.Red else Color(
-                                                85,
-                                                201,
-                                                89,
-                                                255
-                                            )
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = null,
-                                            tint = color
-                                        )
-                                        Text(
-                                            text = "${
-                                                String.format(
-                                                    "%.2f",
-                                                    tradingData.priceChange
-                                                )
-                                            }%",
-                                            fontSize = 18.sp, color = color
-                                        )
-                                    }
-                                }
-                            }
-                            Divider()
-                        }
+                    items(uiItems) { uiItem ->
+                        when (uiItem) {
+                            is UiModel.TradingDataItem ->
+                                TradingDataListItem(uiItem.tradingData)
 
+                            is UiModel.Separator -> SeparatorItem(uiItem.date)
+
+                            null -> {}
+                        }
+                        Divider()
                     }
                 }
-
-                if (tradingDataItems.loadState.append is LoadState.Loading) {
+                if (uiItems.loadState.append is LoadState.Loading) {
                     item {
-                        CircularProgressIndicator(modifier = modifier.padding(vertical = 8.dp))
+                        CircularProgressIndicator(modifier = indicatorModifier)
                     }
                 }
             }
         }
     }
+}
 
+@Composable
+fun SeparatorItem(content: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.height(52.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = content, fontSize = 22.sp,
+            modifier = modifier.padding(start = 16.dp)
+        )
+        Spacer(modifier = modifier.weight(1f))
+    }
+}
+
+@Composable
+fun TradingDataListItem(data: TradingData, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = data.openPrice.toString(), fontSize = 18.sp)
+            Column {
+                Text(text = data.openTime.toDateString("MM.dd.yy HH:mm"))
+                Text(text = "High: ${data.highPrice}")
+                Text(text = "Low: ${data.lowPrice}")
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val color =
+                    if (data.priceWentDown) Color.Red else Color(
+                        85,
+                        201,
+                        89,
+                        255
+                    )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = color
+                )
+                Text(
+                    text = "${String.format("%.2f", data.priceChange)}%",
+                    fontSize = 18.sp, color = color
+                )
+            }
+        }
+    }
 }

@@ -25,9 +25,8 @@ class TradingDataRemoteMediator @Inject constructor(
     private val apiService: ApiService
 ) : RemoteMediator<Int, TradingData>() {
 
-    init {
-        println("currency: $currency")
-    }
+    private val pagingKeysDao = db.pagingKeysDao()
+    private val tradingDataDao = db.tradingDataDao()
 
     override suspend fun load(
         loadType: LoadType,
@@ -37,16 +36,16 @@ class TradingDataRemoteMediator @Inject constructor(
         val defaultStartTime = UtilFunctions.getStartTimeAtHourWithOffset(limit)
         val startTime = when (loadType) {
             LoadType.PREPEND -> {
-                val pagingKeys = state.getPrependPagingKeys(db.pagingKeysDao())
+                val pagingKeys = state.getPrependPagingKeys(pagingKeysDao)
                 pagingKeys?.prevPage
                     ?: return MediatorResult.Success(endOfPaginationReached = pagingKeys != null)
             }
             LoadType.REFRESH -> {
-                val pagingKeys = state.getRefreshPagingKeys(db.pagingKeysDao())
+                val pagingKeys = state.getRefreshPagingKeys(pagingKeysDao)
                 pagingKeys?.nextPage?.plus(ONE_HOUR_IN_MSEC * limit) ?: defaultStartTime
             }
             LoadType.APPEND -> {
-                val pagingKeys = state.getAppendPagingKeys(db.pagingKeysDao())
+                val pagingKeys = state.getAppendPagingKeys(pagingKeysDao)
                 pagingKeys?.nextPage
                     ?: return MediatorResult.Success(endOfPaginationReached = pagingKeys != null)
             }
@@ -56,8 +55,8 @@ class TradingDataRemoteMediator @Inject constructor(
             val isEndOfPagination = tradingData.isEmpty()
             db.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    db.tradingDataDao().deleteTradingDataList()
-                    db.pagingKeysDao().deletePagingKeysList()
+                    tradingDataDao.deleteTradingDataList()
+                    pagingKeysDao.deletePagingKeysList()
                 }
                 val nextStartTime = if (isEndOfPagination) null
                 else startTime - ONE_HOUR_IN_MSEC * limit
@@ -70,8 +69,8 @@ class TradingDataRemoteMediator @Inject constructor(
                         nextPage = nextStartTime
                     )
                 }
-                db.pagingKeysDao().insertPagingKeysList(pagingKeysList)
-                db.tradingDataDao().insertTradingDataList(tradingData)
+                pagingKeysDao.insertPagingKeysList(pagingKeysList)
+                tradingDataDao.insertTradingDataList(tradingData)
             }
             MediatorResult.Success(endOfPaginationReached = isEndOfPagination)
         } catch (e: HttpException) {
