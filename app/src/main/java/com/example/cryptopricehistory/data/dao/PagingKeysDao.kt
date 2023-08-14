@@ -15,10 +15,10 @@ interface PagingKeysDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPagingKeysList(pagingKeys: List<PagingKeys>)
 
-    @Delete
-    suspend fun deletePagingKeysList(pagingKeys: List<PagingKeys>)
+    @Query("DELETE  FROM pagingKeys")
+    suspend fun deletePagingKeysList()
 
-    @Query("SELECT * FROM pagingKeys")
-    fun getPagingKeysList(): List<PagingKeys>
+    @Query("SELECT * FROM pagingKeys WHERE tradingDataId = :openTime")
+    suspend fun getPagingKey(openTime: Long): PagingKeys
 
 }

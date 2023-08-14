@@ -2,7 +2,8 @@ package com.example.cryptopricehistory.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.cryptopricehistory.data.api.repository.TradingDataRepository
+import androidx.paging.cachedIn
+import com.example.cryptopricehistory.data.repository.TradingDataRepository
 import com.example.cryptopricehistory.data.model.TradingData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,19 +31,8 @@ class TradingDataViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val tradingDataFlow = _currentSearchFlow.flatMapLatest { currency ->
-        flow {
-            try {
-                val data = repository.getTradingData(currency)
-                emit(data)
-            } catch (e: HttpException) {
-                emit(listOf())
-            }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000L),
-        initialValue = listOf()
-    )
+        repository.getTradingDataFlow(currency)
+    }.cachedIn(viewModelScope)
 
     fun updateSearchTextFieldValue(newValue: String) {
         _currentSearchFlow.value = newValue

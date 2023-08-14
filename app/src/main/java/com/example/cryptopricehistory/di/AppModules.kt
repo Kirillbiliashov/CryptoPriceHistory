@@ -3,8 +3,8 @@ package com.example.cryptopricehistory.di
 import android.content.Context
 import androidx.room.Room
 import com.example.cryptopricehistory.data.api.ApiService
-import com.example.cryptopricehistory.data.api.repository.TradingDataRepository
-import com.example.cryptopricehistory.data.api.repository.TradingDataRepositoryImpl
+import com.example.cryptopricehistory.data.repository.TradingDataRepository
+import com.example.cryptopricehistory.data.repository.TradingDataRepositoryImpl
 import com.example.cryptopricehistory.data.dao.TradingDataDao
 import com.example.cryptopricehistory.data.db.TradingDataDatabase
 import com.example.cryptopricehistory.data.model.TradingData
@@ -67,6 +67,7 @@ object DatabaseModule {
     @Provides
     fun provideDatabase(@ApplicationContext ctxt: Context) = Room
         .databaseBuilder(ctxt, TradingDataDatabase::class.java, "trading_data")
+        .fallbackToDestructiveMigration()
         .build()
 
     @Provides

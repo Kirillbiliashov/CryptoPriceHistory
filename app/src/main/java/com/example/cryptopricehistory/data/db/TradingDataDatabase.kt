@@ -7,7 +7,7 @@ import com.example.cryptopricehistory.data.dao.TradingDataDao
 import com.example.cryptopricehistory.data.model.PagingKeys
 import com.example.cryptopricehistory.data.model.TradingData
 
-@Database(entities = [TradingData::class, PagingKeys::class], version = 1)
+@Database(entities = [TradingData::class, PagingKeys::class], version = 3)
 abstract class TradingDataDatabase: RoomDatabase() {
 
     abstract fun tradingDataDao(): TradingDataDao

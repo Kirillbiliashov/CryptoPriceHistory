@@ -9,7 +9,8 @@ interface ApiService {
     @GET("v3/klines")
     suspend fun getTradingData(
         @Query("symbol") currency: String,
-        @Query("interval") interval: String = "1d",
+        @Query("startTime") startTime: Long,
+        @Query("interval") interval: String = "1h",
         @Query("limit") limit: Int = 10
     ): List<TradingData>
 }

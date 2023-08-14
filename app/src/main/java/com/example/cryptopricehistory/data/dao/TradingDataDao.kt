@@ -14,9 +14,9 @@ interface TradingDataDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTradingDataList(tradingData: List<TradingData>)
 
-    @Delete
-    suspend fun deleteTradingDataList(tradingData: List<TradingData>)
+    @Query("DELETE FROM tradingData")
+    suspend fun deleteTradingDataList()
 
     @Query("SELECT * FROM tradingData ORDER BY openTime DESC")
-    fun getTradingData(): PagingSource<Int, TradingData>
+     fun getTradingData(): PagingSource<Int, TradingData>
 }
