@@ -8,6 +8,7 @@ import androidx.paging.map
 import com.example.cryptopricehistory.data.repository.TradingDataRepository
 import com.example.cryptopricehistory.data.model.TradingData
 import com.example.cryptopricehistory.data.paging.UiModel
+import com.example.cryptopricehistory.utils.Constants
 import com.example.cryptopricehistory.utils.UtilFunctions.toDateString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,7 +28,7 @@ class TradingDataViewModel @Inject constructor(
     private val repository: TradingDataRepository
 ) : ViewModel() {
 
-    private val _currentSearchFlow = MutableStateFlow("BTCUSDT")
+    private val _currentSearchFlow = MutableStateFlow(Constants.DEFAULT_CURRENCY_PAIR)
     val currentSearchFlow: StateFlow<String> = _currentSearchFlow
 
     private val _isErrorFlow = MutableStateFlow(false)
@@ -43,11 +44,13 @@ class TradingDataViewModel @Inject constructor(
                     if (after == null) {
                         return@insertSeparators null
                     }
-                    val afterDateStr = after.tradingData.openTime.toDateString("MM.dd.yy")
+                    val afterDateStr = after.tradingData.openTime
+                        .toDateString(Constants.DAY_FORMAT)
                     if (before == null) {
                         return@insertSeparators UiModel.Separator(afterDateStr)
                     }
-                    val beforeDateStr = before.tradingData.openTime.toDateString("MM.dd.yy")
+                    val beforeDateStr = before.tradingData.openTime
+                        .toDateString(Constants.DAY_FORMAT)
                     return@insertSeparators if (beforeDateStr == afterDateStr) null
                     else UiModel.Separator(afterDateStr)
                 }

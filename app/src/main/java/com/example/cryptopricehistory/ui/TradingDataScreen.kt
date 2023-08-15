@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,8 +38,10 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.cryptopricehistory.utils.UtilFunctions.toDateString
 import androidx.paging.compose.items
+import com.example.cryptopricehistory.R
 import com.example.cryptopricehistory.data.model.TradingData
 import com.example.cryptopricehistory.data.paging.UiModel
+import com.example.cryptopricehistory.utils.Constants
 import retrofit2.HttpException
 import java.io.IOException
 
@@ -59,7 +62,7 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
             OutlinedTextField(
                 value = currentSearchState.value,
                 onValueChange = viewModel::updateSearchTextFieldValue,
-                label = { Text(text = "Currency pair") })
+                label = { Text(text = stringResource(R.string.currency_pair)) })
             Spacer(modifier = modifier.height(8.dp))
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,7 +81,7 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
                         when (refresh.error) {
                             is HttpException ->
                                 Text(
-                                    text = "No result found for this query",
+                                    text = stringResource(R.string.no_result),
                                     fontSize = 18.sp
                                 )
 
@@ -109,7 +112,10 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
                     }
 
                     is LoadState.Error -> item {
-                        TryAgainColumn(onTryClick = uiItems::retry, modifier = modifier.padding(8.dp))
+                        TryAgainColumn(
+                            onTryClick = uiItems::retry,
+                            modifier = modifier.padding(8.dp)
+                        )
                     }
 
                     else -> {}
@@ -124,11 +130,14 @@ fun TryAgainColumn(
     onTryClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
-        Text(text = "Error loading data", fontSize = 18.sp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        Text(text = stringResource(R.string.error_loading_data), fontSize = 18.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = onTryClick) {
-            Text(text = "Try again")
+            Text(text = stringResource(R.string.try_again))
         }
     }
 }
@@ -136,7 +145,7 @@ fun TryAgainColumn(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TradingDataTopBar(modifier: Modifier = Modifier) {
-    TopAppBar(title = { Text(text = "Crypto price history") })
+    TopAppBar(title = { Text(text = stringResource(R.string.app_name)) })
 }
 
 @Composable
@@ -165,7 +174,7 @@ fun TradingDataListItem(data: TradingData, modifier: Modifier = Modifier) {
         ) {
             Text(text = data.openPrice.toString(), fontSize = 18.sp)
             Column {
-                Text(text = data.openTime.toDateString("MM.dd.yy HH:mm"))
+                Text(text = data.openTime.toDateString(Constants.HOUR_FORMAT))
                 Text(text = "High: ${data.highPrice}")
                 Text(text = "Low: ${data.lowPrice}")
             }

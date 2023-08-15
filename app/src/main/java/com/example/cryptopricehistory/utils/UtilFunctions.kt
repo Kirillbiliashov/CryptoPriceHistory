@@ -17,7 +17,8 @@ object UtilFunctions {
         val currentHour = currentTime.hour
         val beginningOfHour =
             currentTime.withHour(currentHour).withMinute(0).withSecond(0).withNano(0)
-        return beginningOfHour.toInstant(ZoneOffset.UTC).toEpochMilli() - 3_600_000 * offset
+        return beginningOfHour.toInstant(ZoneOffset.UTC).toEpochMilli() -
+                Constants.MSECS_IN_HOUR * offset
     }
 
 }

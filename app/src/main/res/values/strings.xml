@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Crypto Price History</string>
+    <string name="no_result">No result found for this query</string>
+    <string name="error_loading_data">Error loading data</string>
+    <string name="try_again">Try again</string>
+    <string name="currency_pair">Currency pair</string>
 </resources>
