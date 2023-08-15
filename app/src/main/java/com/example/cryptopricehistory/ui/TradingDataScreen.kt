@@ -10,9 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +35,8 @@ import com.example.cryptopricehistory.utils.UtilFunctions.toDateString
 import androidx.paging.compose.items
 import com.example.cryptopricehistory.data.model.TradingData
 import com.example.cryptopricehistory.data.paging.UiModel
+import retrofit2.HttpException
+import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +44,7 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
     val viewModel: TradingDataViewModel = hiltViewModel()
     val uiItems = viewModel.tradingDataFlow.collectAsLazyPagingItems()
     val currentSearchState = viewModel.currentSearchFlow.collectAsState()
-    Scaffold(topBar = { TopAppBar(title = { Text(text = "Crypto price history") }) }) { padding ->
+    Scaffold(topBar = { TradingDataTopBar() }) { padding ->
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -59,12 +61,22 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
                 modifier = modifier.fillMaxHeight()
             ) {
                 val indicatorModifier = modifier.padding(vertical = 8.dp)
-                if (uiItems.loadState.refresh is LoadState.Loading) {
-                    item {
+                when (val refresh = uiItems.loadState.refresh) {
+                    is LoadState.Loading -> item {
                         CircularProgressIndicator(modifier = indicatorModifier)
                     }
-                } else {
-                    items(uiItems) { uiItem ->
+
+                    is LoadState.Error -> item {
+                        when (refresh.error) {
+                            is HttpException ->
+                                Text(text = "No result found for your query")
+
+                            is IOException ->
+                                TryAgainColumn(onTryClick = uiItems::retry)
+                        }
+                    }
+
+                    is LoadState.NotLoading -> items(uiItems) { uiItem ->
                         when (uiItem) {
                             is UiModel.TradingDataItem ->
                                 TradingDataListItem(uiItem.tradingData)
@@ -87,13 +99,33 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun TryAgainColumn(
+    onTryClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = "Error loading data")
+        Spacer(modifier = modifier.height(8.dp))
+        Button(onClick = onTryClick) {
+            Text(text = "Try again")
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TradingDataTopBar(modifier: Modifier = Modifier) {
+    TopAppBar(title = { Text(text = "Crypto price history") })
+}
+
+@Composable
 fun SeparatorItem(content: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.height(52.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = content, fontSize = 22.sp,
+            text = content, fontSize = 24.sp,
             modifier = modifier.padding(start = 16.dp)
         )
         Spacer(modifier = modifier.weight(1f))

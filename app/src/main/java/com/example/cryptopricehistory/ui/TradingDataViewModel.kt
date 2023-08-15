@@ -27,12 +27,8 @@ class TradingDataViewModel @Inject constructor(
     private val repository: TradingDataRepository
 ) : ViewModel() {
 
-    private val _currentSearchFlow = MutableStateFlow("")
-    val currentSearchFlow: StateFlow<String> = _currentSearchFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000L),
-        initialValue = ""
-    )
+    private val _currentSearchFlow = MutableStateFlow("BTCUSDT")
+    val currentSearchFlow: StateFlow<String> = _currentSearchFlow
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val tradingDataFlow = _currentSearchFlow.flatMapLatest { currency ->

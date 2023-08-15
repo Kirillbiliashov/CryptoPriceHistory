@@ -40,10 +40,12 @@ class TradingDataRemoteMediator @Inject constructor(
                 pagingKeys?.prevPage
                     ?: return MediatorResult.Success(endOfPaginationReached = pagingKeys != null)
             }
+
             LoadType.REFRESH -> {
                 val pagingKeys = state.getRefreshPagingKeys(pagingKeysDao)
                 pagingKeys?.nextPage?.plus(ONE_HOUR_IN_MSEC * limit) ?: defaultStartTime
             }
+
             LoadType.APPEND -> {
                 val pagingKeys = state.getAppendPagingKeys(pagingKeysDao)
                 pagingKeys?.nextPage
@@ -74,9 +76,10 @@ class TradingDataRemoteMediator @Inject constructor(
             }
             MediatorResult.Success(endOfPaginationReached = isEndOfPagination)
         } catch (e: HttpException) {
+            println("http exception: ${e.message}")
             MediatorResult.Error(e)
         } catch (e: IOException) {
-            println(e.message)
+            println("io exception: ${e.message}")
             MediatorResult.Error(e)
         }
     }
