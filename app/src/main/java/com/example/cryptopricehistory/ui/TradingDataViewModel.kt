@@ -30,6 +30,9 @@ class TradingDataViewModel @Inject constructor(
     private val _currentSearchFlow = MutableStateFlow("BTCUSDT")
     val currentSearchFlow: StateFlow<String> = _currentSearchFlow
 
+    private val _isErrorFlow = MutableStateFlow(false)
+    val isErrorFlow: StateFlow<Boolean> = _isErrorFlow
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val tradingDataFlow = _currentSearchFlow.flatMapLatest { currency ->
         repository.getTradingDataFlow(currency)
@@ -53,6 +56,10 @@ class TradingDataViewModel @Inject constructor(
 
     fun updateSearchTextFieldValue(newValue: String) {
         _currentSearchFlow.value = newValue
+    }
+
+    fun setError(isError: Boolean) {
+        _isErrorFlow.value = isError
     }
 
 }

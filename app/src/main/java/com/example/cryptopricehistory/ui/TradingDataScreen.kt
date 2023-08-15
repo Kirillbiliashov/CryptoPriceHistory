@@ -44,6 +44,7 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
     val viewModel: TradingDataViewModel = hiltViewModel()
     val uiItems = viewModel.tradingDataFlow.collectAsLazyPagingItems()
     val currentSearchState = viewModel.currentSearchFlow.collectAsState()
+    val isErrorState = viewModel.isErrorFlow.collectAsState()
     Scaffold(topBar = { TradingDataTopBar() }) { padding ->
         Column(
             modifier = modifier
@@ -63,10 +64,12 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
                 val indicatorModifier = modifier.padding(vertical = 8.dp)
                 when (val refresh = uiItems.loadState.refresh) {
                     is LoadState.Loading -> item {
+                        viewModel.setError(false)
                         CircularProgressIndicator(modifier = indicatorModifier)
                     }
 
                     is LoadState.Error -> item {
+                        viewModel.setError(true)
                         when (refresh.error) {
                             is HttpException ->
                                 Text(text = "No result found for your query")
@@ -76,17 +79,21 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
                         }
                     }
 
-                    is LoadState.NotLoading -> items(uiItems) { uiItem ->
-                        when (uiItem) {
-                            is UiModel.TradingDataItem ->
-                                TradingDataListItem(uiItem.tradingData)
+                    is LoadState.NotLoading -> if (!isErrorState.value) {
+                        uiItems.loadState.mediator
+                        items(uiItems) { uiItem ->
+                            when (uiItem) {
+                                is UiModel.TradingDataItem ->
+                                    TradingDataListItem(uiItem.tradingData)
 
-                            is UiModel.Separator -> SeparatorItem(uiItem.date)
+                                is UiModel.Separator -> SeparatorItem(uiItem.date)
 
-                            null -> {}
+                                null -> {}
+                            }
+                            Divider()
                         }
-                        Divider()
                     }
+
                 }
                 if (uiItems.loadState.append is LoadState.Loading) {
                     item {
