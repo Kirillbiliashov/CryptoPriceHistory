@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
@@ -22,7 +23,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,6 +60,7 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
                 value = currentSearchState.value,
                 onValueChange = viewModel::updateSearchTextFieldValue,
                 label = { Text(text = "Currency pair") })
+            Spacer(modifier = modifier.height(8.dp))
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -72,7 +77,10 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
                         viewModel.setError(true)
                         when (refresh.error) {
                             is HttpException ->
-                                Text(text = "No result found for your query")
+                                Text(
+                                    text = "No result found for this query",
+                                    fontSize = 18.sp
+                                )
 
                             is IOException ->
                                 TryAgainColumn(onTryClick = uiItems::retry)
@@ -95,10 +103,16 @@ fun TradingDataScreen(modifier: Modifier = Modifier) {
                     }
 
                 }
-                if (uiItems.loadState.append is LoadState.Loading) {
-                    item {
+                when (uiItems.loadState.append) {
+                    is LoadState.Loading -> item {
                         CircularProgressIndicator(modifier = indicatorModifier)
                     }
+
+                    is LoadState.Error -> item {
+                        TryAgainColumn(onTryClick = uiItems::retry, modifier = modifier.padding(8.dp))
+                    }
+
+                    else -> {}
                 }
             }
         }
@@ -110,9 +124,9 @@ fun TryAgainColumn(
     onTryClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = "Error loading data")
-        Spacer(modifier = modifier.height(8.dp))
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
+        Text(text = "Error loading data", fontSize = 18.sp)
+        Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = onTryClick) {
             Text(text = "Try again")
         }
